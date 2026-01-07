@@ -1,0 +1,47 @@
+- name: create directories
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0755'
+  loop:
+    - /var/www/html/releases
+    - /var/www/html/backup
+  become: yes
+
+- name: set release version
+  set_fact:
+    release_version: "v{{ ansible_date_time.epoch }}"
+
+- name: create release directory 
+  file:
+    path: '/var/www/html/releases/{{ release_version }}'
+    state: directory 
+  become: yes 
+
+- name: deploy index.html
+  copy:
+    content: |
+      <html>
+      <body>
+        <h1> version {{ release_version }} </h1>
+        <h2> Deployed using jenkins + ansible </h2>
+      </body>
+      </html>
+    dest: "/var/www/html/releases/{{ release_version }}/index.html"
+  become: yes
+
+- name: Backup current release (if exists)
+  shell: |
+    if [ -L /var/www/html/current ]; then
+      cp -r $(readlink /var/www/html/current) /var/www/html/backup/
+    fi
+  become: yes
+  ignore_errors: yes
+
+- name: switch to new release 
+  file: 
+    src: "/var/www/html/releases/{{ release_version }}"
+    dest: /var/www/html/current
+    state: link
+    force: yes
+  become: yes
