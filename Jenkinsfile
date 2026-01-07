@@ -1,6 +1,10 @@
 pipeline {
     agent { label 'ansible-node' }
 
+    options {
+        skipDefaultCheckout(true)
+    }
+
     tools { git 'git-linux' }
 
     parameters {
