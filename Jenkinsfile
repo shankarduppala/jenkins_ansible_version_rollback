@@ -13,7 +13,8 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/shankarduppala/jenkins_ansible_version_rollback.git'
+                url: 'https://github.com/shankarduppala/jenkins_ansible_version_rollback.git',
+                credentialsId: 'Git-Creds'
             }
         }
 
