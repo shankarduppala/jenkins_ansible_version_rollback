@@ -1,6 +1,8 @@
 pipeline {
     agent { label 'ansible-node' }
 
+    tools { git 'git-linux' }
+
     parameters {
         choice(
             name: 'ACTION',
