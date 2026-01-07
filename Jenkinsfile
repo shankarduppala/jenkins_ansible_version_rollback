@@ -1,12 +1,6 @@
 pipeline {
     agent { label 'ansible-node' }
 
-    options {
-        skipDefaultCheckout(true)
-    }
-
-    tools { git 'git-linux' }
-
     parameters {
         choice(
             name: 'ACTION',
@@ -16,30 +10,28 @@ pipeline {
     }
 
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                url: 'https://github.com/shankarduppala/jenkins_ansible_version_rollback.git',
-                credentialsId: 'Git-Creds'
+                checkout scm
             }
         }
 
-        stage('Deploy using ansible') {
+        stage('Deploy using Ansible') {
             when {
                 expression { params.ACTION == 'deploy' }
             }
             steps {
                 sh '''
+                  ansible --version
                   ansible-playbook -i inventory/hosts playbook/deploy.yaml
                 '''
             }
         }
 
-        stage ('Rollback') {
+        stage('Rollback') {
             when {
                 expression { params.ACTION == 'rollback' }
             }
-
             steps {
                 sh '''
                   PREV=$(ls -dt /var/www/html/releases/* | sed -n '2p')
@@ -47,9 +39,9 @@ pipeline {
                     echo "No previous release found"
                     exit 1
                   fi
-                  ln -sfn $PREV /var/www/html/current
+                  sudo ln -sfn $PREV /var/www/html/current
                   sudo systemctl reload nginx
-                  echo 'Rolled back to $PREV'
+                  echo "Rolled back to $PREV"
                 '''
             }
         }
